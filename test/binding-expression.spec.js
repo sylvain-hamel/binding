@@ -12,6 +12,76 @@ describe('BindingExpression', () => {
     bindingEngine.observerLocator.dirtyChecker.checkDelay = checkDelay;
   });
 
+
+  describe('Date value handling', () => {
+    it('does not update target when date is equal', done => {
+      let source = {foo: {bar: new Date(1776, 7, 4)}};
+      let target = {};
+      let bindingExpression = bindingEngine.createBindingExpression('value', 'foo.bar', bindingMode.twoWay);
+      let binding = bindingExpression.createBinding(target);
+      binding.bind(createScopeForTest(source));
+      let sourceObserver = bindingEngine.observerLocator.getObserver(source.foo, 'bar');
+      spyOn(binding, 'updateTarget').and.callThrough();
+
+      source.foo.bar = new Date(1776, 7, 4);
+      setTimeout(() => {
+        expect(binding.updateTarget.calls.count()).toBe(0);
+        done();
+      }, checkDelay * 2);
+    });
+
+    it('updates target when date is not equal', done => {
+      let source = {foo: {bar: new Date(1776, 7, 4)}};
+      let target = {};
+      let bindingExpression = bindingEngine.createBindingExpression('value', 'foo.bar', bindingMode.twoWay);
+      let binding = bindingExpression.createBinding(target);
+      binding.bind(createScopeForTest(source));
+      let sourceObserver = bindingEngine.observerLocator.getObserver(source.foo, 'bar');
+      spyOn(binding, 'updateTarget').and.callThrough();
+
+      source.foo.bar = new Date(1969, 7, 20);
+      setTimeout(() => {
+        expect(binding.updateTarget.calls.count()).toBe(1);
+        expect(target.value).toBe(source.foo.bar);
+        done();
+      }, checkDelay * 2);
+    });
+
+    it('updates target when source date becomes undefined', done => {
+      let source = {foo: {bar: new Date(1776, 7, 4)}};
+      let target = {};
+      let bindingExpression = bindingEngine.createBindingExpression('value', 'foo.bar', bindingMode.twoWay);
+      let binding = bindingExpression.createBinding(target);
+      binding.bind(createScopeForTest(source));
+      let sourceObserver = bindingEngine.observerLocator.getObserver(source.foo, 'bar');
+      spyOn(binding, 'updateTarget').and.callThrough();
+
+      source.foo.bar = undefined;
+      setTimeout(() => {
+        expect(binding.updateTarget.calls.count()).toBe(1);
+        expect(target.value).toBe(source.foo.bar);
+        done();
+      }, checkDelay * 2);
+    });
+
+    it('updates target when source date gets initialized', done => {
+      let source = {foo: {bar: undefined}};
+      let target = {};
+      let bindingExpression = bindingEngine.createBindingExpression('value', 'foo.bar', bindingMode.twoWay);
+      let binding = bindingExpression.createBinding(target);
+      binding.bind(createScopeForTest(source));
+      let sourceObserver = bindingEngine.observerLocator.getObserver(source.foo, 'bar');
+      spyOn(binding, 'updateTarget').and.callThrough();
+
+      source.foo.bar = new Date(1995, 11, 18);
+      setTimeout(() => {
+        expect(binding.updateTarget.calls.count()).toBe(1);
+        expect(target.value).toBe(source.foo.bar);
+        done();
+      }, checkDelay * 2);
+    });
+  });
+
   it('handles AccessMember', done => {
     let source = { foo: { bar: 'baz'} };
     let target = document.createElement('input');
@@ -33,6 +103,7 @@ describe('BindingExpression', () => {
       }, checkDelay * 2);
     }, checkDelay * 2);
   });
+
 
   it('handles ValueConverter', done => {
     let valueConverters = {

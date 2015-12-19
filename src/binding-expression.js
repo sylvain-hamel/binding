@@ -4,7 +4,7 @@ import {enqueueBindingConnect} from './connect-queue';
 
 export class BindingExpression {
   constructor(observerLocator, targetProperty, sourceExpression,
-    mode, lookupFunctions, attribute){
+              mode, lookupFunctions, attribute) {
     this.observerLocator = observerLocator;
     this.targetProperty = targetProperty;
     this.sourceExpression = sourceExpression;
@@ -22,7 +22,7 @@ export class BindingExpression {
       this.targetProperty,
       this.mode,
       this.lookupFunctions
-      );
+    );
   }
 }
 
@@ -51,12 +51,22 @@ export class Binding {
     if (!this.isBound) {
       return;
     }
+
     if (context === sourceContext) {
       oldValue = this.targetObserver.getValue(this.target, this.targetProperty);
       newValue = this.sourceExpression.evaluate(this.source, this.lookupFunctions);
-      if (newValue !== oldValue) {
-        this.updateTarget(newValue);
+
+      if (newValue && newValue.getTime && oldValue && oldValue.getTime) {
+        if (newValue.getTime() != oldValue.getTime()) {
+          this.updateTarget(newValue);
+        }
       }
+      else {
+        if (newValue !== oldValue) {
+          this.updateTarget(newValue);
+        }
+      }
+
       if (this.mode !== bindingMode.oneTime) {
         this._version++;
         this.sourceExpression.connect(this, this.source);
